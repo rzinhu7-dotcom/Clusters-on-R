@@ -101,21 +101,28 @@ confusionmatrixtest
 recordtoscore = read.xlsx("Boston_Housing.xlsx",2)
 recordtoscore$CHAS<-as.factor(recordtoscore$CHAS)
 
+predictedvalue<-predict(modelbostonhousing,
+                        recordtoscore,type='class')
 
 
+predictedvalue
 
+#predict with a different cutoff value
 
+probs<-predict(modelbostonhousing,
+               recordtoscore,type='vector')
 
+class(probs)
+probs
 
+cutoff <- 0.5
+predicted_class <- ifelse(probs[, "1"] > cutoff,
+                          "1","0")
 
+confusionmatrixtrain<-table(predicted=predicted_class,
+                            Actual=trainbostonhousing$highprice)
 
-
-
-
-
-
-
-
-
+confusionmatrixtrain
+(11+0)/nrow(trainbostonhousing)*100
 
 
