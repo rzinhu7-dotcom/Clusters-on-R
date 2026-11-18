@@ -125,4 +125,120 @@ confusionmatrixtrain<-table(predicted=predicted_class,
 confusionmatrixtrain
 (11+0)/nrow(trainbostonhousing)*100
 
+#Regression tree
+
+library(openxlsx)
+boston = read.xlsx("Boston_Housing.xlsx",1)
+str(boston)
+
+#checking data
+range(boston$MEDV)
+
+#converting to factor
+boston$CHAS=as.factor(boston$CHAS)
+str(boston)
+
+#partition the dataset
+library(caTools)
+set.seed(1234)
+ind<-sample.split(boston$MEDV,SplitRatio=0.8)
+train_bh<-subset(boston,ind==TRUE)
+test_bh<-subset(boston,ind==FALSE)
+
+install.packages('rsample')
+library(rsample)
+set.seed(123)
+split <- initial_split(boston, prop = 0.8, strata = "MEDV")
+train_bh <- training(split)
+nrow(train_bh)
+test_bh <- testing(split)
+nrow(test_bh)
+
+#to run regression tree
+library(tree)
+model_bh<-tree(MEDV~.,train_bh)
+model_bh
+
+plot(model_bh)
+text(model_bh,pretty=0)
+
+#predicting with train data
+predicttrain<-predict(model_bh,train_bh)
+head(predicttrain)
+train_bh$predicted<-predicttrain
+
+#calculating model fit measures for training data
+#training data
+#model fit indices Training data
+mse <- mean((predicttrain - train_bh$MEDV)^2)
+mse
+rmse <- sqrt(mean((predicttrain - train_bh$MEDV)^2)) 
+rmse
+mad<-sum(abs(predicttrain - train_bh$MEDV)) / nrow(train_bh)
+mad
+
+#R square -> 1-(RSSE/TSSE) ; 
+#1-(residual sum of square error/total sum of square error)
+x=sum((predicttrain-train_bh$MEDV)^2) #Residual SSE
+y=sum((train_bh$MEDV-mean(train_bh$MEDV))^2) #Total SSE
+Rsquare= 1-(x/y)
+Rsquare
+
+# Adjusted R square
+#1- ((1-Rsquare)(n-1)/(n-p-1)) where n is number of observations and
+#p is number of predictors
+AdjRsquare= 1-((1-Rsquare)*(nrow(train_bh)-1)/
+                 (nrow(train_bh)-(ncol(train_bh)-1)-1))
+AdjRsquare
+
+#predicting with testing data
+predicttest<-predict(model_bh,test_bh)
+head(predicttest)
+head(test_bh$MEDV)
+
+#appending the predicted values to the data frame
+test_bh$predicted<-predicttest
+
+
+#calculating model fit measures for testing data
+#Testing data
+mse <- mean((predicttest - test_bh$MEDV)^2)
+mse
+rmse <- sqrt(mean((predicttest - test_bh$MEDV)^2)) 
+rmse
+mad<-sum(abs(predicttest-test_bh$MEDV))/nrow(test_bh)
+mad
+
+#mse(preds=predicttest,actuals=test_bh$MEDV)
+#rmse(preds=predicttest,actuals=test_bh$MEDV)
+
+xtest=sum((predicttest-test_bh$MEDV)^2) 
+ytest=sum((test_bh$MEDV-mean(test_bh$MEDV))^2)
+Rsquaretest=1-(xtest/ytest)
+Rsquaretest
+
+AdjRsquaretest= 1-( (1-Rsquaretest)*(nrow(test_bh)-1)/
+                      (nrow(test_bh)-(ncol(test_bh)-1)-1))
+AdjRsquaretest
+
+new = read.xlsx("Boston_Housing.xlsx",2)
+new$CHAS<-as.factor(new$CHAS)
+predictedoutcome<-predict(model_bh,new)
+predictedoutcome
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
